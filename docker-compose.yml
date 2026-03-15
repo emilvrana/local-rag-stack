@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag_postgres
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: RagPass2025
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432" # Use 5433 to avoid conflict with local postgres
+    restart: unless-stopped
+
+  embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-0.8
+    container_name: rag_embeddings
+    environment:
+      - MODEL_ID=BAAI/bge-base-en-v1.5
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+
+  llm:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: rag_llm
+    volumes:
+      - ./models:/models # Mount local models directory
+    command: -m /models/your-model.gguf -c 4096 --host 0.0.0.0 --port 8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
