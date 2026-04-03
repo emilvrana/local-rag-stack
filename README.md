@@ -49,12 +49,25 @@ This stack includes:
         - A text embeddings API endpoint at `http://localhost:8081`.
         - An LLM API endpoint at `http://localhost:8080` (compatible with the OpenAI API format).
 
+## Python Example
+
+A complete working example is provided in [`example_rag.py`](example_rag.py). It demonstrates:
+- Database initialization with pgvector
+- Document chunking with sliding windows
+- Embedding via the local TEI service
+- Similarity search using cosine distance
+- Answer generation via the local LLM
+
+```bash
+pip install openai psycopg2-binary requests
+python example_rag.py
+```
+
 ## What's Next?
 
-With these services running, you have the backend for a RAG application. The next step is to write a Python script or application that:
-1.  Loads documents.
-2.  Chunks them into smaller pieces.
-3.  Uses the `embeddings` service to convert chunks into vectors.
-4.  Stores the vectors in the `postgres` database.
-5.  When a user asks a question, it queries the database for relevant document chunks.
-6.  Passes the question and the retrieved chunks to the `llm` service to generate an answer.
+Extend the example for your use case:
+- Add document loaders (PDF, web scraping, APIs)
+- Implement smarter chunking (semantic splits, overlap tuning)
+- Build a web interface (FastAPI, Streamlit)
+- Add caching and rate limiting
+- Deploy to your own infrastructure
