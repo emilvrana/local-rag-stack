@@ -59,9 +59,17 @@ A complete working example is provided in [`example_rag.py`](example_rag.py). It
 - Answer generation via the local LLM
 
 ```bash
-pip install openai psycopg2-binary requests
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy and review configuration
+cp .env.example .env
+
+# Run the example
 python example_rag.py
 ```
+
+All configuration is now externalized to `.env` — database credentials, service URLs, and chunking parameters are no longer hardcoded.
 
 ## What's Next?
 

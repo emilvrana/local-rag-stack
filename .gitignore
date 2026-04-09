@@ -1,0 +1,31 @@
+# Environment files
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models directory (large files)
+models/
+*.gguf
+*.bin
+
+# Database
+postgres_data/
+
+# Logs
+*.log

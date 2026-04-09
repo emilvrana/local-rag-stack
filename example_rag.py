@@ -4,24 +4,41 @@ Simple RAG example for local-rag-stack.
 Demonstrates: document loading → chunking → embedding → storage → retrieval → generation
 
 Requires:
-    pip install openai psycopg2-binary
-    
-Services must be running (docker-compose up -d)
+    pip install openai psycopg2-binary python-dotenv
+
+Setup:
+    1. Copy .env.example to .env: cp .env.example .env
+    2. Adjust .env if you changed docker-compose.yml defaults
+    3. Start services: docker-compose up -d
+    4. Run: python example_rag.py
 """
 
 import os
 import hashlib
 import psycopg2
+from dotenv import load_dotenv
 from openai import OpenAI
 
-# Configuration
-EMBEDDING_URL = "http://localhost:8081/embed"
-LLM_URL = "http://localhost:8080/v1"
-DB_HOST = "localhost"
-DB_PORT = 5433
-DB_NAME = "postgres"
-DB_USER = "postgres"
-DB_PASS = "postgres"
+# Load environment variables from .env file
+load_dotenv()
+
+# Configuration (override via .env file or environment variables)
+EMBEDDING_URL = os.getenv("EMBEDDING_URL", "http://localhost:8081/embed")
+LLM_URL = os.getenv("LLM_URL", "http://localhost:8080/v1")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = int(os.getenv("DB_PORT", "5433"))
+DB_NAME = os.getenv("DB_NAME", "ragdb")
+DB_USER = os.getenv("DB_USER", "raguser")
+DB_PASS = os.getenv("DB_PASS", "RagPass2025")
+
+# LLM settings
+LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "local-model")
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.7"))
+
+# Chunking settings
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
+DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", "3"))
 
 
 def get_embedding(text: str) -> list:
@@ -62,7 +79,7 @@ def init_db():
     conn.close()
 
 
-def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list:
+def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list:
     """Simple sliding window chunking."""
     words = text.split()
     chunks = []
@@ -104,7 +121,7 @@ def add_document(content: str, source: str = "unknown"):
     print(f"Added {len(chunks)} chunks from {source}")
 
 
-def query(question: str, top_k: int = 3) -> str:
+def query(question: str, top_k: int = DEFAULT_TOP_K) -> str:
     """Retrieve relevant chunks and generate an answer."""
     # Get query embedding
     q_embedding = get_embedding(question)
@@ -144,9 +161,9 @@ Question: {question}
 Answer:"""
     
     response = client.chat.completions.create(
-        model="local-model",
+        model=LLM_MODEL_NAME,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+        temperature=LLM_TEMPERATURE
     )
     
     return response.choices[0].message.content
