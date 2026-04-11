@@ -2,15 +2,15 @@
 
 This repository provides a simple `docker-compose.yml` to run the core components of a Retrieval-Augmented Generation (RAG) pipeline on your own server or local machine, even without a GPU.
 
-It is based on the setup described in my blog post: [Running a Local LLM on Your Own Server](https://emil.aiadoption.cz/posts/running-a-local-llm-on-your-own-server).
+> **Update (April 2026):** Now using [Ollama](https://ollama.com/) for LLM serving — automatic model management, broader model support, and simpler configuration. The previous llama.cpp setup remains available as an alternative.
 
 ## Components
 
 This stack includes:
 
 1.  **`postgres`**: A PostgreSQL database with the `pgvector` extension for storing vector embeddings.
-2.  **`embeddings`**: A Hugging Face text embeddings model (`bge-base-en-v1.5`) served via the Text Embeddings Inference container. This service turns your documents into vector embeddings.
-3.  **`llm`**: A GGUF-compatible Large Language Model (like Llama 3, Mistral, etc.) served via `llama.cpp`. This service provides the generative AI capabilities.
+2.  **`embeddings`**: A Hugging Face text embeddings model (`bge-base-en-v1.5`) served via the Text Embeddings Inference container.
+3.  **`llm`**: Local LLM via [Ollama](https://ollama.com/). Pulls and caches models automatically. Supports Llama, Qwen, Mistral, and many others.
 
 ## Prerequisites
 
@@ -25,29 +25,38 @@ This stack includes:
     cd local-rag-stack
     ```
 
-2.  **Download a model:**
-    - Create a `models` directory: `mkdir models`
-    - Download your chosen GGUF model file and place it inside the `models` directory.
+2.  **Configure your model:**
+    - Copy the example environment file: `cp .env.example .env`
+    - Edit `.env` and set `OLLAMA_MODEL` to your preferred model:
+        - `qwen2.5:7b` — fast, good for most tasks (default)
+        - `qwen2.5:14b` — better quality, slower
+        - `llama3.2` — compact, good for constrained environments
+        - See [ollama.com/library](https://ollama.com/library) for all options
 
-3.  **Update the `docker-compose.yml`:**
-    - In the `llm` service definition, change the command from `your-model.gguf` to the actual filename of your model.
-    ```yaml
-    command: -m /models/your-model.gguf -c 4096 --host 0.0.0.0 --port 8080
-    # Change to something like:
-    # command: -m /models/Llama-3-8B-Instruct.Q4_K_M.gguf -c 4096 --host 0.0.0.0 --port 8080
-    ```
-
-4.  **Start the services:**
+3.  **Start the services:**
     ```bash
     docker-compose up -d
     ```
+    The model will download automatically on first startup (this may take a few minutes).
 
-5.  **Verify:**
-    - Check that the containers are running: `docker-compose ps`
-    - You should now have:
-        - A PostgreSQL database running on `localhost:5433`.
-        - A text embeddings API endpoint at `http://localhost:8081`.
-        - An LLM API endpoint at `http://localhost:8080` (compatible with the OpenAI API format).
+4.  **Verify:**
+    ```bash
+    # Check containers are running
+    docker-compose ps
+    
+    # Test the LLM
+    curl http://localhost:8080/api/tags
+    
+    # Test embeddings
+    curl http://localhost:8081/embed -X POST \
+      -H "Content-Type: application/json" \
+      -d '{"inputs": "Hello world"}'
+    ```
+
+You should have:
+- PostgreSQL with pgvector on `localhost:5433`
+- Embeddings API at `http://localhost:8081`
+- LLM API (OpenAI-compatible) at `http://localhost:8080`
 
 ## Python Example
 
@@ -62,14 +71,21 @@ A complete working example is provided in [`example_rag.py`](example_rag.py). It
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy and review configuration
-cp .env.example .env
+# Configure
+# Edit .env with your settings (if you changed defaults in docker-compose.yml)
 
 # Run the example
 python example_rag.py
 ```
 
-All configuration is now externalized to `.env` — database credentials, service URLs, and chunking parameters are no longer hardcoded.
+## Model Recommendations
+
+| Model | Use Case | Notes |
+|-------|----------|-------|
+| `qwen2.5:7b` | General purpose (default) | Good balance of speed and quality |
+| `qwen2.5:14b` | Complex reasoning | Noticeably slower, better answers |
+| `llama3.2` | Constrained environments | Fastest, sufficient for simple tasks |
+| `mistral:7b` | Coding tasks | Good code understanding |
 
 ## What's Next?
 
@@ -79,3 +95,7 @@ Extend the example for your use case:
 - Build a web interface (FastAPI, Streamlit)
 - Add caching and rate limiting
 - Deploy to your own infrastructure
+
+## Alternative: Direct llama.cpp
+
+If you prefer direct GGUF model serving without Ollama, the `docker-compose.yml` includes a commented `llm` service using llama.cpp. Uncomment that block and comment out the Ollama service to switch.

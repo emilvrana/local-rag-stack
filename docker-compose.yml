@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   embeddings:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-0.8
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: rag_embeddings
     environment:
       - MODEL_ID=BAAI/bge-base-en-v1.5
@@ -24,14 +24,36 @@ services:
     restart: unless-stopped
 
   llm:
-    image: ghcr.io/ggerganov/llama.cpp:server
+    image: ollama/ollama:latest
     container_name: rag_llm
     volumes:
-      - ./models:/models # Mount local models directory
-    command: -m /models/your-model.gguf -c 4096 --host 0.0.0.0 --port 8080
+      - ollama_data:/root/.ollama
+      - ./ollama-entrypoint.sh:/entrypoint.sh
     ports:
-      - "8080:8080"
+      - "8080:11434"
+    # Pull model on startup if not present
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "ps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Alternative: llama.cpp for direct GGUF serving
+  # Uncomment this and comment out the 'llm' service above if you prefer llama.cpp
+  # llm:
+  #   image: ghcr.io/ggerganov/llama.cpp:server
+  #   container_name: rag_llm
+  #   volumes:
+  #     - ./models:/models
+  #   command: -m /models/your-model.gguf -c 4096 --host 0.0.0.0 --port 8080
+  #   ports:
+  #     - "8080:8080"
+  #   restart: unless-stopped
 
 volumes:
   postgres_data:
+  ollama_data:
