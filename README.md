@@ -87,11 +87,27 @@ python example_rag.py
 | `llama3.2` | Constrained environments | Fastest, sufficient for simple tasks |
 | `mistral:7b` | Coding tasks | Good code understanding |
 
+## Semantic Chunking
+
+The default chunking now uses **sentence-aware semantic chunking** instead of naive sliding windows. This keeps sentences intact, producing more coherent chunks that work better for RAG retrieval.
+
+```python
+from semantic_chunker import semantic_chunk
+
+# Sentence-aware (default): groups sentences into chunks
+chunks = semantic_chunk(text, chunk_size=500, strategy="sentence")
+
+# Paragraph-aware: splits at paragraph boundaries, subdivides oversized paragraphs
+chunks = semantic_chunk(text, chunk_size=500, strategy="paragraph")
+```
+
+The `example_rag.py` uses semantic chunking automatically. If you need the old naive chunker, just remove the `semantic_chunker` import — it falls back gracefully.
+
 ## What's Next?
 
 Extend the example for your use case:
 - Add document loaders (PDF, web scraping, APIs)
-- Implement smarter chunking (semantic splits, overlap tuning)
+- Try paragraph-aware chunking for structured documents
 - Build a web interface (FastAPI, Streamlit)
 - Add caching and rate limiting
 - Deploy to your own infrastructure

@@ -80,16 +80,26 @@ def init_db():
 
 
 def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list:
-    """Simple sliding window chunking."""
-    words = text.split()
-    chunks = []
-    start = 0
-    while start < len(words):
-        end = min(start + chunk_size, len(words))
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
-        start += chunk_size - overlap
-    return chunks
+    """Chunk text using sentence-aware semantic chunking.
+
+    Falls back to naive sliding window if semantic_chunker is unavailable.
+    Semantic chunking keeps sentences intact instead of splitting mid-word,
+    producing more coherent chunks for RAG retrieval.
+    """
+    try:
+        from semantic_chunker import chunk_text_semantic
+        return chunk_text_semantic(text, chunk_size, overlap)
+    except ImportError:
+        # Fallback: naive sliding window
+        words = text.split()
+        chunks = []
+        start = 0
+        while start < len(words):
+            end = min(start + chunk_size, len(words))
+            chunk = " ".join(words[start:end])
+            chunks.append(chunk)
+            start += chunk_size - overlap
+        return chunks
 
 
 def add_document(content: str, source: str = "unknown"):

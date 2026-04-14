@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-14
+
+### Added
+
+- `semantic_chunker.py`: sentence-aware and paragraph-aware chunking
+- `example_rag.py` now uses semantic chunking by default (falls back to naive sliding window)
+- Updated README with semantic chunking section
+
 ## 2026-04-11
 
 ### Changed
