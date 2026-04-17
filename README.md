@@ -15,7 +15,7 @@ This stack includes:
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) are installed.
-- You have a GGUF-format language model file. You can download one from the [Hugging Face Hub](https://huggingface.co/models?search=gguf). A good starting point is a quantized 7B or 8B model.
+- ~2 GB disk space for the embeddings model; 4–8 GB for the LLM (varies by model).
 
 ## How to Use
 
@@ -41,16 +41,14 @@ This stack includes:
 
 4.  **Verify:**
     ```bash
-    # Check containers are running
-    docker-compose ps
+    # Quick health check (all services)
+    ./healthcheck.sh
     
-    # Test the LLM
-    curl http://localhost:8080/api/tags
-    
-    # Test embeddings
+    # Or manually:
+    curl http://localhost:8080/api/tags    # LLM
     curl http://localhost:8081/embed -X POST \
       -H "Content-Type: application/json" \
-      -d '{"inputs": "Hello world"}'
+      -d '{"inputs": "Hello world"}'      # Embeddings
     ```
 
 You should have:
