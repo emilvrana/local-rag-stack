@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-20
+
+### Added
+
+- `hybrid_search.py`: combines vector similarity with PostgreSQL full-text search and trigram matching using Reciprocal Rank Fusion (RRF)
+- Configurable `alpha` parameter to weight vector vs keyword results (default 0.7)
+- `init_hybrid_tables()` auto-creates tsvector column, GIN index, and trigram index
+- Fallback trigram search for terms not in the text search dictionary
+
 ## 2026-04-14
 
 ### Added

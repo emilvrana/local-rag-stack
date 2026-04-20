@@ -101,6 +101,22 @@ chunks = semantic_chunk(text, chunk_size=500, strategy="paragraph")
 
 The `example_rag.py` uses semantic chunking automatically. If you need the old naive chunker, just remove the `semantic_chunker` import — it falls back gracefully.
 
+## Hybrid Search
+
+Vector similarity alone misses exact term matches. The new `hybrid_search.py` module combines vector search with PostgreSQL full-text search and trigram matching, using Reciprocal Rank Fusion (RRF) to merge results.
+
+```python
+from hybrid_search import hybrid_query, init_hybrid_tables
+
+# Run once to add full-text indexes
+init_hybrid_tables()
+
+# Alpha controls vector vs keyword weight (0.0–1.0, default 0.7)
+answer = hybrid_query("What is pgvector?", alpha=0.7)
+```
+
+Why it matters: queries with specific names, error codes, or IDs often fail on pure vector search. Keyword-only search misses paraphrases. Hybrid catches both.
+
 ## What's Next?
 
 Extend the example for your use case:
