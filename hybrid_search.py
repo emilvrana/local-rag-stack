@@ -175,41 +175,24 @@ def hybrid_query(
     conn.close()
 
     # Reciprocal Rank Fusion (RRF) to combine both result sets
-    all_ids = set(vec_results.keys()) | set(kw_results.keys())
+    # Pre-compute ranks from sorted order (O(n log n) instead of O(n²))
     k = 60  # RRF constant
 
+    vec_ranks = {doc_id: rank for rank, doc_id in enumerate(
+        sorted(vec_results, key=lambda d: vec_results[d].get("vec_score", 0), reverse=True), 1
+    )}
+    kw_ranks = {doc_id: rank for rank, doc_id in enumerate(
+        sorted(kw_results, key=lambda d: kw_results[d].get("kw_score", 0), reverse=True), 1
+    )}
+
+    all_ids = set(vec_ranks) | set(kw_ranks)
     scored = []
     for doc_id in all_ids:
-        # Vector rank
-        vec_rank = float('inf')
-        if doc_id in vec_results:
-            sorted_vec = sorted(
-                vec_results.items(), key=lambda x: x[1].get("vec_score", 0),
-                reverse=True
-            )
-            for rank, (did, _) in enumerate(sorted_vec, 1):
-                if did == doc_id:
-                    vec_rank = rank
-                    break
-
-        # Keyword rank
-        kw_rank = float('inf')
-        if doc_id in kw_results:
-            sorted_kw = sorted(
-                kw_results.items(), key=lambda x: x[1].get("kw_score", 0),
-                reverse=True
-            )
-            for rank, (did, _) in enumerate(sorted_kw, 1):
-                if did == doc_id:
-                    kw_rank = rank
-                    break
-
-        # RRF score
         rrf_score = 0.0
-        if vec_rank != float('inf'):
-            rrf_score += alpha / (k + vec_rank)
-        if kw_rank != float('inf'):
-            rrf_score += (1 - alpha) / (k + kw_rank)
+        if doc_id in vec_ranks:
+            rrf_score += alpha / (k + vec_ranks[doc_id])
+        if doc_id in kw_ranks:
+            rrf_score += (1 - alpha) / (k + kw_ranks[doc_id])
 
         doc_data = vec_results.get(doc_id) or kw_results.get(doc_id)
         scored.append((rrf_score, doc_data["content"], doc_data["source"]))
@@ -221,11 +204,11 @@ def hybrid_query(
     if not top_results:
         return "No relevant documents found."
 
-    # Build context and query LLM
-    context = "\n\n".join([f"[{r[2]}]: {r[1]}" for r in top_results])
+    # Build context and query LLM — include source numbers for attribution
+    context = "\n\n".join([f"[Source {i+1} — {r[2]}]: {r[1]}" for i, r in enumerate(top_results)])
 
     client = OpenAI(base_url=LLM_URL, api_key="not-needed")
-    prompt = f"""Answer the question using only the provided context. If the context doesn't contain enough information, say so.
+    prompt = f"""Answer the question using only the provided context. If the context doesn't contain enough information, say so. Cite sources by number when referencing specific information.
 
 Context:
 {context}
