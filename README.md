@@ -117,6 +117,36 @@ answer = hybrid_query("What is pgvector?", alpha=0.7)
 
 Why it matters: queries with specific names, error codes, or IDs often fail on pure vector search. Keyword-only search misses paraphrases. Hybrid catches both.
 
+## Evaluating Retrieval Quality
+
+How do you know if your RAG pipeline actually retrieves the right documents? The `eval_retrieval.py` script measures precision, recall, and mean reciprocal rank (MRR) against a labeled evaluation set.
+
+```bash
+# Quick evaluation with built-in sample questions
+python eval_retrieval.py
+
+# Custom evaluation set (JSONL: one {"question": "...", "relevant_sources": [...]} per line)
+python eval_retrieval.py --eval-file my_evals.jsonl --top-k 5 --verbose
+
+# Compare hybrid vs pure vector
+python eval_retrieval.py --hybrid --alpha 0.7
+```
+
+Output:
+```
+==================================================
+Retrieval Evaluation Results
+==================================================
+Method:      vector
+Questions:   5
+Top-K:       3
+Precision@K: 0.800
+Recall:      0.800
+MRR:         0.900
+```
+
+Create your own eval set to measure retrieval quality on your actual data — evaluation isn't overhead, it's the specification of what "working" means.
+
 ## What's Next?
 
 Extend the example for your use case:

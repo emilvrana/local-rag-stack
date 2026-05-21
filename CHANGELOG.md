@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-05-21
+
+### Added
+- `eval_retrieval.py`: retrieval evaluation utility measuring Precision@K, Recall, and MRR
+- Built-in default evaluation set matching sample docs
+- Support for custom JSONL evaluation files (`--eval-file`)
+- Hybrid search evaluation mode (`--hybrid --alpha`)
+- Verbose per-question output (`-v`)
+
+## Previous
+
 ## 2026-04-20
 
 ### Added
