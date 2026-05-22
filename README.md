@@ -117,6 +117,20 @@ answer = hybrid_query("What is pgvector?", alpha=0.7)
 
 Why it matters: queries with specific names, error codes, or IDs often fail on pure vector search. Keyword-only search misses paraphrases. Hybrid catches both.
 
+## Streaming Responses
+
+Waiting for a full LLM response feels slow. Use `query_stream()` to see answers token-by-token:
+
+```python
+from example_rag import query_stream
+
+for token in query_stream("What is pgvector?"):
+    print(token, end="", flush=True)
+# Tokens appear in real time instead of all at once
+```
+
+Works with any Ollama model — just set `OLLAMA_MODEL` in `.env`.
+
 ## Evaluating Retrieval Quality
 
 How do you know if your RAG pipeline actually retrieves the right documents? The `eval_retrieval.py` script measures precision, recall, and mean reciprocal rank (MRR) against a labeled evaluation set.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-05-22
+
+### Added
+- `query_stream()`: streaming LLM responses via OpenAI-compatible SSE — tokens arrive in real time
+- Streaming example in `main()` demonstrating `query_stream()` usage
+
 ## 2026-05-21
 
 ### Added

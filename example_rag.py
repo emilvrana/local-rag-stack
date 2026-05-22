@@ -179,6 +179,63 @@ Answer:"""
     return response.choices[0].message.content
 
 
+def query_stream(question: str, top_k: int = DEFAULT_TOP_K):
+    """Retrieve relevant chunks and stream the answer token-by-token.
+
+    Yields each token as it arrives, so callers can print or display
+    partial responses in real time instead of waiting for the full answer.
+
+    Usage:
+        for token in query_stream("What is pgvector?"):
+            print(token, end="", flush=True)
+        print()  # newline after streaming
+    """
+    q_embedding = get_embedding(question)
+
+    conn = psycopg2.connect(
+        host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
+        user=DB_USER, password=DB_PASS
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT content, source, 1 - (embedding <=> %s::vector) as similarity
+           FROM documents
+           ORDER BY embedding <=> %s::vector
+           LIMIT %s;""",
+        (q_embedding, q_embedding, top_k)
+    )
+    results = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if not results:
+        yield "No relevant documents found."
+        return
+
+    context = "\n\n".join([f"[{r[1]}]: {r[0]}" for r in results])
+
+    client = OpenAI(base_url=LLM_URL, api_key="not-needed")
+    prompt = f"""Answer the question using only the provided context.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""
+
+    response = client.chat.completions.create(
+        model=LLM_MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=LLM_TEMPERATURE,
+        stream=True,
+    )
+
+    for chunk in response:
+        if chunk.choices and chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content
+
+
 def main():
     """Example usage."""
     init_db()
@@ -211,6 +268,15 @@ def main():
     for q in questions:
         print(f"\nQ: {q}")
         print(f"A: {query(q)}")
+
+    # Streaming example — tokens arrive in real time
+    print("\n--- Streaming query ---")
+    stream_q = "What is pgvector used for?"
+    print(f"Q: {stream_q}")
+    print("A: ", end="", flush=True)
+    for token in query_stream(stream_q):
+        print(token, end="", flush=True)
+    print()
 
 
 if __name__ == "__main__":
