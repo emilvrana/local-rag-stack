@@ -44,6 +44,9 @@ This stack includes:
     # Quick health check (all services)
     ./healthcheck.sh
     
+    # Or wait for services to become ready (useful in CI or scripts)
+    python wait_for_services.py
+    
     # Or manually:
     curl http://localhost:8080/api/tags    # LLM
     curl http://localhost:8081/embed -X POST \
@@ -160,6 +163,26 @@ MRR:         0.900
 ```
 
 Create your own eval set to measure retrieval quality on your actual data — evaluation isn't overhead, it's the specification of what "working" means.
+
+## Waiting for Services
+
+Docker Compose starts containers quickly, but PostgreSQL, TEI, and Ollama need time to initialize. Use `wait_for_services.py` to poll until everything is ready:
+
+```bash
+# Wait for all services (default 120s timeout)
+python wait_for_services.py
+
+# Custom timeout (useful for slow hardware or large models)
+python wait_for_services.py --timeout 300
+
+# Wait for a single service
+python wait_for_services.py --service postgres
+
+# Use in scripts — exits 0 on success, 1 on failure
+python wait_for_services.py && echo "Ready!" || echo "Still starting..."
+```
+
+This is especially useful in CI pipelines or when pulling a large LLM model for the first time.
 
 ## What's Next?
 
