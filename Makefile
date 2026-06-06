@@ -1,4 +1,4 @@
-.PHONY: up down restart status health test clean help
+.PHONY: up down restart status health test reindex clean help
 
 # Local RAG Stack — common operations
 # Configure: cp .env.example .env && edit .env
@@ -41,6 +41,9 @@ shell: ## Open psql session
 		psql -h localhost -p $$(grep PG_PORT .env 2>/dev/null | cut -d= -f2 || echo 5433) \
 		-U $$(grep POSTGRES_USER .env 2>/dev/null | cut -d= -f2 || echo raguser) \
 		-d $$(grep POSTGRES_DB .env 2>/dev/null | cut -d= -f2 || echo ragdb)
+
+reindex: ## Rebuild vector and FTS indexes (non-blocking)
+	python3 reindex.py --analyze
 
 query: ## Quick RAG query (usage: make query Q="your question")
 	@test -n "$(Q)" || (echo "Usage: make query Q=\"your question\"" && exit 1)

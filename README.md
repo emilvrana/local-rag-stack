@@ -184,6 +184,22 @@ python wait_for_services.py && echo "Ready!" || echo "Still starting..."
 
 This is especially useful in CI pipelines or when pulling a large LLM model for the first time.
 
+## Index Maintenance
+
+After bulk document loads or if query performance degrades, rebuild indexes:
+
+```bash
+# Reindex everything + update statistics
+make reindex
+
+# Or selectively:
+python3 reindex.py --vector    # Only vector (HNSW/IVFFlat) indexes
+python3 reindex.py --fts       # Only full-text search indexes
+python3 reindex.py --analyze   # Reindex + ANALYZE for query planner
+```
+
+Uses `REINDEX CONCURRENTLY` — non-blocking for reads.
+
 ## What's Next?
 
 Extend the example for your use case:
