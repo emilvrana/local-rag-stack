@@ -120,6 +120,27 @@ answer = hybrid_query("What is pgvector?", alpha=0.7)
 
 Why it matters: queries with specific names, error codes, or IDs often fail on pure vector search. Keyword-only search misses paraphrases. Hybrid catches both.
 
+## Reranking
+
+Hybrid search retrieves broad candidates. Reranking applies a second-stage relevance model to improve precision — the standard pattern in production RAG systems.
+
+```python
+from reranker import rerank_hybrid
+
+# Full pipeline: hybrid retrieval → rerank → generate
+answer = rerank_hybrid("What is pgvector?", rerank_mode="cross-encoder")
+
+# Or rerank existing candidates
+from reranker import rerank
+ranked = rerank(question, candidates, mode="llm", top_k=3)
+```
+
+Two modes:
+- **`cross-encoder`** (default): Uses a smaller model for fast scoring. Lower latency, good accuracy.
+- **`llm`**: Uses the main LLM as a relevance judge. More thorough, higher cost per query.
+
+The `rerank_hybrid()` function overretrieves (3× top_k), reranks, and returns only the most relevant chunks to the generator.
+
 ## Streaming Responses
 
 Waiting for a full LLM response feels slow. Use `query_stream()` to see answers token-by-token:

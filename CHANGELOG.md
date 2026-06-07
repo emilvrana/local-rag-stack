@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-06-07
+
+### Added
+- `reranker.py`: two-stage retrieve-then-rerank pipeline
+  - Cross-encoder mode: uses a smaller model for fast relevance scoring
+  - LLM judge mode: uses the main LLM to rate relevance 0–10
+  - `rerank_hybrid()`: full pipeline (hybrid retrieval → rerank → generate)
+  - Overretrieve-then-rerank pattern for better precision at low latency cost
+- README: added Reranking section
+
 ## 2026-05-22
 
 ### Added
