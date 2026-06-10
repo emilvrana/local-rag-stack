@@ -1,5 +1,8 @@
 # Local RAG Stack with Docker
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 This repository provides a simple `docker-compose.yml` to run the core components of a Retrieval-Augmented Generation (RAG) pipeline on your own server or local machine, even without a GPU.
 
 > **Update (April 2026):** Now using [Ollama](https://ollama.com/) for LLM serving — automatic model management, broader model support, and simpler configuration. The previous llama.cpp setup remains available as an alternative.
