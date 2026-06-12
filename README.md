@@ -224,6 +224,26 @@ python3 reindex.py --analyze   # Reindex + ANALYZE for query planner
 
 Uses `REINDEX CONCURRENTLY` — non-blocking for reads.
 
+## Batch Ingestion
+
+The `batch_ingest.py` script loads documents from files, directories, or URLs into the RAG pipeline. It uses semantic chunking by default and handles encoding gracefully.
+
+```bash
+# Ingest a single file
+python batch_ingest.py ./docs/readme.md
+
+# Ingest all supported files in a directory (recursive)
+python batch_ingest.py ./docs/ --recursive
+
+# Ingest from URLs
+python batch_ingest.py --urls https://example.com/page1 https://example.com/page2
+
+# Combine sources with custom chunking
+python batch_ingest.py ./docs/ --urls https://example.com/api-docs --chunk-size 300 --chunk-strategy paragraph
+```
+
+Supports `.txt`, `.md`, `.csv`, `.html`, `.rst`, `.json` files. HTML content from URLs is auto-stripped to plain text.
+
 ## What's Next?
 
 Extend the example for your use case:
